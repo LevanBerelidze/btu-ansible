@@ -1,0 +1,5 @@
+---
+- name: Create a directory for the application
+  file:
+    path: "{{ app_directory }}"
+    state: directory

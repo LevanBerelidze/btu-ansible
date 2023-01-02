@@ -1,0 +1,11 @@
+---
+- name: Download source code from repository
+  git:
+    repo: "{{ repository_url }}"
+    dest: "{{ app_directory }}"
+- name: Make user the owner of the directory
+  file:
+    path: "{{ app_directory }}"
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: 0744

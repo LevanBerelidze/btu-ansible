@@ -1,0 +1,23 @@
+---
+- name: Copy SSH key
+  hosts: web
+  become: yes
+  vars:
+    source_file: ~/.ssh/id_rsa.pub
+    username: test-02
+  tasks:
+    - name: Create SSH directory
+      file:
+        dest: "/home/{{ username }}/.ssh"
+        mode: 0700
+        owner: "{{ username }}"
+        group: "{{ username }}"
+        state: directory
+
+    - name: Copy SSH key
+      copy:
+        src: "{{ source_file }}"
+        dest: "/home/{{ username }}/.ssh/authorized_keys"
+        mode: 0600
+        owner: "{{ username }}"
+        group: "{{ username }}"

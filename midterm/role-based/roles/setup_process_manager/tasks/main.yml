@@ -1,0 +1,13 @@
+---
+- name: Install the process manager
+  npm:
+    name: pm2
+    global: yes
+    state: latest
+- name: Start pm2 process
+  become_user: "{{ username }}"
+  command:
+    cmd: "/usr/local/bin/pm2 start --name {{ process_name }} {{ app_filename }}"
+    chdir: "{{ app_directory }}"
+  environment:
+    APP_PORT: "{{ app_port }}"

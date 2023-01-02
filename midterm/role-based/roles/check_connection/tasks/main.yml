@@ -1,0 +1,8 @@
+---
+- name: Check connection
+  become: true
+  command: curl -k http://localhost
+  register: server_response
+
+- name: Show server response
+  debug: var=server_response

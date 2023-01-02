@@ -1,0 +1,25 @@
+---
+- name: Setup a Node.js web server
+  hosts: web
+  become: yes
+  vars:
+    packages:
+      - git
+      - nodejs
+      - nginx
+    repository_url: https://github.com/LevanBerelidze/nodejs-hello.git
+    app_directory: /opt/nodejs
+    app_filename: index.js
+    username: nodeapp
+    process_name: node-app
+    app_port: 3000
+    nginx_config_src: /etc/ansible/files/nodejs.conf
+    nginx_config_dest: /etc/nginx/conf.d/nodejs.conf
+  roles:
+    - install_packages
+    - create_user
+    - create_app_directory
+    - download_source_code
+    - setup_process_manager
+    - setup_nginx
+    - check_connection

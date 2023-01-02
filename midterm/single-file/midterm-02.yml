@@ -1,0 +1,107 @@
+---
+- name: Setup a Node.js web server
+  hosts: web
+  become: yes
+  vars:
+    packages:
+      - git
+      - nodejs
+      - nginx
+    repository_url: https://github.com/LevanBerelidze/nodejs-hello.git
+    app_directory: /opt/nodejs
+    app_filename: index.js
+    username: nodeapp
+    process_name: node-app
+    app_port: 3000
+    proxy_port: 80
+    nginx_config_src: /etc/ansible/files/nodejs.conf
+    nginx_config_dest: /etc/nginx/conf.d/nodejs.conf
+    cert_key_src: /etc/ansible/files/nginx-selfsigned.key
+    cert_key_dest: /etc/ssl/certs/nginx-selfsigned.key
+    cert_src: /etc/ansible/files/nginx-selfsigned.crt
+    cert_dest: /etc/ssl/certs/nginx-selfsigned.crt
+
+  tasks:
+    - name: Install packages
+      package:
+        name: "{{ packages }}"
+        state: present
+
+    - name: Create a user
+      user:
+        name: "{{ username }}"
+
+    - name: Create a directory for the application
+      file:
+        path: "{{ app_directory }}"
+        state: directory
+
+    - name: Download source code from repository
+      git:
+        repo: "{{ repository_url }}"
+        dest: "{{ app_directory }}"
+
+    - name: Make user the owner of the directory
+      file:
+        path: "{{ app_directory }}"
+        owner: "{{ username }}"
+        group: "{{ username }}"
+        mode: 0744
+
+    - name: Install the process manager
+      npm:
+        name: pm2
+        global: yes
+        state: latest
+
+    - name: Set httpd permission for nginx
+      seboolean:
+        name: httpd_can_network_connect
+        state: yes
+        persistent: yes
+
+    - name: Start pm2 process
+      become_user: "{{ username }}"
+      command:
+        cmd: "/usr/local/bin/pm2 start --name {{ process_name }} {{ app_filename }}"
+        chdir: "{{ app_directory }}"
+      environment:
+        APP_PORT: "{{ app_port }}"
+
+    - name: Copy nginx config
+      copy:
+        src: "{{ nginx_config_src }}"
+        dest: "{{ nginx_config_dest }}"
+        owner: nginx
+        group: nginx
+        mode: 0644
+
+    - name: Copy cert key
+      copy:
+        src: "{{ cert_key_src }}"
+        dest: "{{ cert_key_dest }}"
+        owner: nginx
+        group: nginx
+        mode: 0644
+
+    - name: Copy cert
+      copy:
+        src: "{{ cert_src }}"
+        dest: "{{ cert_dest }}"
+        owner: nginx
+        group: nginx
+        mode: 0644
+
+    - name: Start and enable nginx service
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+
+    - name: Check connection
+      become: yes
+      command: curl -k http://localhost
+      register: server_response
+
+    - name: Show server response
+      debug: var=server_response

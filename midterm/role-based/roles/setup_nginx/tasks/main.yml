@@ -1,0 +1,20 @@
+---
+- name: Set httpd permission for nginx
+  seboolean:
+    name: httpd_can_network_connect
+    state: yes
+    persistent: yes
+
+- name: Copy nginx config
+  copy:
+    src: "{{ nginx_config_src }}"
+    dest: "{{ nginx_config_dest }}"
+    owner: nginx
+    group: nginx
+    mode: 0644
+
+- name: Start and enable nginx service
+  service:
+    name: nginx
+    state: started
+    enabled: yes
